@@ -1,0 +1,446 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  HR_ADMIN
+  EMPLOYEE
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  INACTIVE
+  RESIGNED
+  SUSPENDED
+}
+
+enum LocationType {
+  OFFICE
+  BOOTH
+}
+
+enum AssignmentType {
+  BOOTH
+  TEMPORARY
+  PROJECT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+  EARLY_LEAVE
+  MISSING_CHECKOUT
+  DAY_OFF
+  ON_LEAVE
+}
+
+enum EventType {
+  CHECK_IN
+  CHECK_OUT
+}
+
+enum LeaveType {
+  ANNUAL
+  SICK
+  PERSONAL
+  OTHER
+}
+
+enum LeaveStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  taxId       String?
+  address     String?
+  phone       String?
+  email       String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  departments          Department[]
+  employees            Employee[]
+  workLocations        WorkLocation[]
+  shiftTemplates       ShiftTemplate[]
+  users                User[]
+  userCompanyAccesses  UserCompanyAccess[]
+  attendanceSummaries  AttendanceDailySummary[]
+  leaveRecords         LeaveRecord[]
+  holidays             Holiday[]
+
+  @@map("companies")
+}
+
+model Department {
+  id        String   @id @default(uuid())
+  companyId String
+  code      String
+  name      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employees Employee[]
+
+  @@unique([companyId, code])
+  @@map("departments")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         Role      @default(EMPLOYEE)
+  companyId    String?
+  employeeId   String?   @unique
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  company      Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  employee     Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  companyAccesses UserCompanyAccess[]
+  adjustmentsMade AttendanceAdjustment[] @relation("AdjustedByUser")
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+model UserCompanyAccess {
+  id        String   @id @default(uuid())
+  userId    String
+  companyId String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+  @@map("user_company_accesses")
+}
+
+model Employee {
+  id                   String           @id @default(uuid())
+  employeeId           String           @unique
+  firstName            String
+  lastName             String
+  email                String?
+  phone                String?
+  companyId            String
+  departmentId         String
+  position             String
+  employmentStartDate  DateTime
+  resignationDate      DateTime?
+  employmentStatus     EmploymentStatus @default(ACTIVE)
+  defaultShiftId       String?
+  defaultLocationId    String?
+  avatarUrl            String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  company              Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  department           Department       @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  defaultShift         ShiftTemplate?   @relation("DefaultShiftEmployees", fields: [defaultShiftId], references: [id], onDelete: SetNull)
+  defaultLocation      WorkLocation?    @relation("DefaultLocationEmployees", fields: [defaultLocationId], references: [id], onDelete: SetNull)
+
+  user                 User?
+  defaultShifts        EmployeeDefaultShift[]
+  workSchedules        WorkSchedule[]
+  locationAssignments  LocationAssignment[]
+  attendanceEvents     AttendanceEvent[]
+  attendanceSummaries  AttendanceDailySummary[]
+  attendancePhotos     AttendancePhoto[]
+  attendanceAdjustments AttendanceAdjustment[]
+  leaveRecords         LeaveRecord[]
+
+  @@index([companyId])
+  @@index([departmentId])
+  @@index([employmentStatus])
+  @@map("employees")
+}
+
+model WorkLocation {
+  id                 String       @id @default(uuid())
+  locationCode       String       @unique
+  locationName       String
+  companyId          String?
+  locationType       LocationType @default(OFFICE)
+  address            String?
+  latitude           Float
+  longitude          Float
+  allowedRadiusMeters Int          @default(100)
+  active             Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  company            Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  defaultEmployees   Employee[]   @relation("DefaultLocationEmployees")
+  locationAssignments LocationAssignment[]
+  scheduledSummaries AttendanceDailySummary[]
+
+  @@index([companyId])
+  @@index([locationType])
+  @@map("work_locations")
+}
+
+model ShiftTemplate {
+  id                 String       @id @default(uuid())
+  companyId          String?
+  shiftCode          String       @unique
+  shiftName          String
+  startTime          String       // Format "HH:mm" e.g. "09:00"
+  endTime            String       // Format "HH:mm" e.g. "18:00"
+  gracePeriodMinutes Int          @default(15)
+  active             Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  company            Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  defaultEmployees   Employee[]   @relation("DefaultShiftEmployees")
+  employeeDefaultShifts EmployeeDefaultShift[]
+  workSchedules      WorkSchedule[]
+  locationAssignments LocationAssignment[]
+  scheduledSummaries AttendanceDailySummary[]
+
+  @@index([companyId])
+  @@map("shift_templates")
+}
+
+model EmployeeDefaultShift {
+  id              String        @id @default(uuid())
+  employeeId      String
+  shiftTemplateId String
+  effectiveDate   DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  employee        Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  shiftTemplate   ShiftTemplate @relation(fields: [shiftTemplateId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("employee_default_shifts")
+}
+
+model WorkSchedule {
+  id              String         @id @default(uuid())
+  employeeId      String
+  date            DateTime       @db.Date
+  shiftTemplateId String?
+  isRestDay       Boolean        @default(false)
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  employee        Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  shiftTemplate   ShiftTemplate? @relation(fields: [shiftTemplateId], references: [id], onDelete: SetNull)
+
+  @@unique([employeeId, date])
+  @@index([date])
+  @@map("work_schedules")
+}
+
+model LocationAssignment {
+  id              String         @id @default(uuid())
+  employeeId      String
+  date            DateTime       @db.Date
+  workLocationId  String
+  shiftTemplateId String?
+  assignmentType  AssignmentType @default(BOOTH)
+  notes           String?
+  createdById     String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  employee        Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  workLocation    WorkLocation   @relation(fields: [workLocationId], references: [id], onDelete: Restrict)
+  shiftTemplate   ShiftTemplate? @relation(fields: [shiftTemplateId], references: [id], onDelete: SetNull)
+
+  @@index([employeeId, date])
+  @@index([workLocationId, date])
+  @@map("location_assignments")
+}
+
+model AttendanceDailySummary {
+  id                    String            @id @default(uuid())
+  employeeId            String
+  companyId             String
+  date                  DateTime          @db.Date
+  scheduledShiftId      String?
+  scheduledLocationId   String?
+  effectiveStartTime    String            // "09:00"
+  effectiveEndTime      String            // "18:00"
+  checkInTime           DateTime?
+  checkOutTime          DateTime?
+  checkInPhotoUrl       String?           @db.Text
+  checkOutPhotoUrl      String?           @db.Text
+  checkInDistanceMeters Float?
+  checkOutDistanceMeters Float?
+  checkInLatitude       Float?
+  checkInLongitude      Float?
+  checkOutLatitude      Float?
+  checkOutLongitude     Float?
+  attendanceStatus      AttendanceStatus  @default(ABSENT)
+  isLate                Boolean           @default(false)
+  lateMinutes           Int               @default(0)
+  isEarlyLeave          Boolean           @default(false)
+  earlyLeaveMinutes     Int               @default(0)
+  totalWorkMinutes      Int               @default(0)
+  isCorrected           Boolean           @default(false)
+  correctionReason      String?
+  correctedById         String?
+  correctedAt           DateTime?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  employee              Employee          @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  company               Company           @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  scheduledShift        ShiftTemplate?    @relation(fields: [scheduledShiftId], references: [id], onDelete: SetNull)
+  scheduledLocation     WorkLocation?     @relation(fields: [scheduledLocationId], references: [id], onDelete: SetNull)
+
+  events                AttendanceEvent[]
+  adjustments           AttendanceAdjustment[]
+
+  @@unique([employeeId, date])
+  @@index([companyId, date])
+  @@index([attendanceStatus])
+  @@map("attendance_daily_summaries")
+}
+
+model AttendanceEvent {
+  id                      String                  @id @default(uuid())
+  attendanceDailySummaryId String?
+  employeeId              String
+  eventType               EventType
+  eventTime               DateTime                @default(now())
+  latitude                Float
+  longitude               Float
+  accuracy                Float?
+  distanceMeters          Float
+  isWithinRadius          Boolean
+  photoUrl                String                  @db.Text
+  deviceInfo              String?
+  notes                   String?
+  createdAt               DateTime                @default(now())
+
+  dailySummary            AttendanceDailySummary? @relation(fields: [attendanceDailySummaryId], references: [id], onDelete: SetNull)
+  employee                Employee                @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  photos                  AttendancePhoto[]
+
+  @@index([employeeId, eventTime])
+  @@map("attendance_events")
+}
+
+model AttendancePhoto {
+  id                String           @id @default(uuid())
+  attendanceEventId String?
+  employeeId        String
+  photoType         EventType
+  storagePath       String           @db.Text
+  capturedAt        DateTime         @default(now())
+  mimeType          String           @default("image/jpeg")
+  fileSize          Int              @default(0)
+  createdAt         DateTime         @default(now())
+
+  attendanceEvent   AttendanceEvent? @relation(fields: [attendanceEventId], references: [id], onDelete: SetNull)
+  employee          Employee         @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+
+  @@index([employeeId])
+  @@map("attendance_photos")
+}
+
+model AttendanceAdjustment {
+  id              String                 @id @default(uuid())
+  dailySummaryId  String
+  employeeId      String
+  adjustedById    String
+  previousCheckIn DateTime?
+  newCheckIn      DateTime?
+  previousCheckOut DateTime?
+  newCheckOut     DateTime?
+  previousStatus  AttendanceStatus
+  newStatus       AttendanceStatus
+  reason          String
+  createdAt       DateTime               @default(now())
+
+  dailySummary    AttendanceDailySummary @relation(fields: [dailySummaryId], references: [id], onDelete: Cascade)
+  employee        Employee               @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  adjustedBy      User                   @relation("AdjustedByUser", fields: [adjustedById], references: [id], onDelete: Restrict)
+
+  @@index([dailySummaryId])
+  @@index([employeeId])
+  @@map("attendance_adjustments")
+}
+
+model LeaveRecord {
+  id           String      @id @default(uuid())
+  employeeId   String
+  companyId    String
+  leaveType    LeaveType   @default(ANNUAL)
+  startDate    DateTime    @db.Date
+  endDate      DateTime    @db.Date
+  reason       String?
+  status       LeaveStatus @default(APPROVED)
+  approvedById String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  employee     Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  company      Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId, startDate, endDate])
+  @@index([companyId])
+  @@map("leave_records")
+}
+
+model Holiday {
+  id          String   @id @default(uuid())
+  companyId   String?
+  holidayDate DateTime @db.Date
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company     Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  @@index([holidayDate])
+  @@index([companyId])
+  @@map("holidays")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  details   String?  @db.Text
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
