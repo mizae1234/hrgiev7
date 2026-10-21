@@ -155,9 +155,9 @@ export default function ReportsPage() {
       {/* Preview Table */}
       <Card className="border-slate-200/80 overflow-hidden p-0">
         <div className="overflow-x-auto max-h-[550px]">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full min-w-[1100px] text-left text-xs border-collapse">
             <thead className="sticky top-0 bg-slate-100/95 backdrop-blur-xs z-10">
-              <tr className="border-b border-slate-200 text-slate-600 font-bold">
+              <tr className="border-b border-slate-200 text-slate-600 font-bold whitespace-nowrap">
                 <th className="py-3 px-4">รหัสพนักงาน</th>
                 <th className="py-3 px-4">ชื่อ - นามสกุล</th>
                 <th className="py-3 px-4">บริษัท & แผนก</th>
@@ -165,7 +165,7 @@ export default function ReportsPage() {
                 <th className="py-3 px-4">กะเวลา</th>
                 <th className="py-3 px-4">เวลาเข้างาน</th>
                 <th className="py-3 px-4">เวลาออกงาน</th>
-                <th className="py-3 px-4">สาย (นาที)</th>
+                <th className="py-3 px-4">สาย</th>
                 <th className="py-3 px-4 text-center">สถานะ</th>
               </tr>
             </thead>
@@ -187,35 +187,40 @@ export default function ReportsPage() {
                   const statusInfo = getStatusBadgeInfo(item.attendanceStatus);
                   return (
                     <tr key={idx} className="hover:bg-slate-50/80">
-                      <td className="py-3 px-4 font-mono font-bold text-teal-700">
+                      <td className="py-3 px-4 font-mono font-bold text-teal-700 whitespace-nowrap">
                         {item.employee?.employeeId}
                       </td>
-                      <td className="py-3 px-4 font-semibold text-slate-900">
+                      <td className="py-3 px-4 font-semibold text-slate-900 whitespace-nowrap">
                         {item.employee?.firstName} {item.employee?.lastName}
                       </td>
-                      <td className="py-3 px-4 text-slate-600">
+                      <td className="py-3 px-4 text-slate-600 min-w-[200px]">
                         {item.employee?.company?.code} - {item.employee?.department?.name?.split("(")[0]}
                       </td>
                       <td className="py-3 px-4 text-slate-800">
-                        {item.scheduledLocation?.locationName}
+                        <div
+                          className="max-w-[200px] truncate"
+                          title={item.scheduledLocation?.locationName}
+                        >
+                          {item.scheduledLocation?.locationName}
+                        </div>
                       </td>
-                      <td className="py-3 px-4 font-mono text-slate-600">
+                      <td className="py-3 px-4 font-mono text-slate-600 whitespace-nowrap">
                         {item.effectiveStartTime} - {item.effectiveEndTime}
                       </td>
-                      <td className="py-3 px-4 font-mono font-bold text-slate-800">
+                      <td className="py-3 px-4 font-mono font-bold text-slate-800 whitespace-nowrap">
                         {item.checkInTime ? formatBangkokTime(new Date(item.checkInTime)) : "-"}
                       </td>
-                      <td className="py-3 px-4 font-mono font-bold text-slate-800">
+                      <td className="py-3 px-4 font-mono font-bold text-slate-800 whitespace-nowrap">
                         {item.checkOutTime ? formatBangkokTime(new Date(item.checkOutTime)) : "-"}
                       </td>
-                      <td className="py-3 px-4 font-mono">
+                      <td className="py-3 px-4 whitespace-nowrap">
                         {item.lateMinutes > 0 ? (
                           <span className="text-amber-700 font-bold">{formatDuration(item.lateMinutes)}</span>
                         ) : (
                           <span className="text-slate-400">-</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
                         <span
                           className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusInfo.className}`}
                         >

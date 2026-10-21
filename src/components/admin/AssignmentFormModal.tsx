@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, AlertTriangle, RefreshCw } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -35,6 +35,10 @@ export function AssignmentFormModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Day context for the selected date: who already checked in / already has an assignment
+  const [checkedInMap, setCheckedInMap] = useState<Record<string, string>>({});
+  const [assignedMap, setAssignedMap] = useState<Record<string, string>>({});
+
   useEffect(() => {
     if (isOpen) {
       const boothLocations = locations.filter((l) => l.locationType === "BOOTH");
@@ -48,6 +52,48 @@ export function AssignmentFormModal({
       setError(null);
     }
   }, [isOpen, initialDate, locations, shifts, employees]);
+
+  useEffect(() => {
+    if (!isOpen || !formData.date) return;
+    let cancelled = false;
+
+    Promise.all([
+      fetch(`/api/admin/attendance?companyId=ALL&date=${formData.date}`).then((r) => r.json()),
+      fetch(`/api/admin/assignments?companyId=ALL&date=${formData.date}`).then((r) => r.json()),
+    ])
+      .then(([attData, assignData]) => {
+        if (cancelled) return;
+        const checked: Record<string, string> = {};
+        for (const a of attData.attendances || []) {
+          if (a.checkInTime) {
+            checked[a.employeeId] = new Date(a.checkInTime).toLocaleTimeString("th-TH", {
+              timeZone: "Asia/Bangkok",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            });
+          }
+        }
+        const assigned: Record<string, string> = {};
+        for (const a of assignData.assignments || []) {
+          assigned[a.employeeId] = a.workLocation?.locationName || "สถานที่เดิม";
+        }
+        setCheckedInMap(checked);
+        setAssignedMap(assigned);
+      })
+      .catch((err) => console.error("Error loading day context:", err));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, formData.date]);
+
+  const empLabel = (id: string) => {
+    const e = employees.find((x) => x.id === id);
+    return e ? `${e.employeeId} ${e.firstName} ${e.lastName}` : id;
+  };
+  const selectedCheckedIn = formData.employeeIds.filter((id) => checkedInMap[id]);
+  const selectedReplacing = formData.employeeIds.filter((id) => assignedMap[id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,11 +219,26 @@ export function AssignmentFormModal({
                     }}
                     className="rounded text-teal-600 focus:ring-teal-500"
                   />
-                  <div className="text-xs">
+                  <div className="text-xs flex-1 min-w-0">
                     <span className="font-bold text-slate-800">
                       {emp.employeeId} - {emp.firstName} {emp.lastName}
                     </span>
                     <span className="text-[11px] text-slate-500 ml-2">({emp.position})</span>
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    {checkedInMap[emp.id] && (
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 whitespace-nowrap">
+                        ลงเวลาแล้ว {checkedInMap[emp.id]}
+                      </span>
+                    )}
+                    {assignedMap[emp.id] && (
+                      <span
+                        title={assignedMap[emp.id]}
+                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 whitespace-nowrap"
+                      >
+                        มีมอบหมายเดิม
+                      </span>
+                    )}
                   </div>
                 </label>
               );
@@ -192,6 +253,42 @@ export function AssignmentFormModal({
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           placeholder="เช่น ปฏิบัติงานส่งเสริมการขาย กะบ่าย..."
         />
+
+        {selectedCheckedIn.length > 0 && (
+          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs space-y-1">
+            <div className="flex items-center gap-2 font-bold">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+              พนักงานต่อไปนี้ลงเวลาในวันที่ {formData.date} ไปแล้ว
+            </div>
+            <ul className="list-disc pl-6 space-y-0.5">
+              {selectedCheckedIn.map((id) => (
+                <li key={id}>
+                  {empLabel(id)} (เข้างาน {checkedInMap[id]} น.)
+                </li>
+              ))}
+            </ul>
+            <p className="text-[11px] text-amber-700">
+              การมอบหมายนี้จะ<strong>ไม่เปลี่ยน</strong>สถานที่/กะในรายการลงเวลาที่บันทึกไปแล้วของวันนั้น
+              (จะมีผลเฉพาะการลงเวลาครั้งถัดไป เช่น ลงเวลาออกงาน ถ้ายังไม่ได้ออก)
+            </p>
+          </div>
+        )}
+
+        {selectedReplacing.length > 0 && (
+          <div className="p-3 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-xs space-y-1">
+            <div className="flex items-center gap-2 font-bold">
+              <RefreshCw className="h-4 w-4 shrink-0 text-sky-600" />
+              จะแทนที่การมอบหมายเดิมของวันที่ {formData.date} (1 คนมีได้ 1 การมอบหมายต่อวัน)
+            </div>
+            <ul className="list-disc pl-6 space-y-0.5">
+              {selectedReplacing.map((id) => (
+                <li key={id}>
+                  {empLabel(id)} — เดิม: {assignedMap[id]}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
           <Button variant="outline" type="button" onClick={onClose}>

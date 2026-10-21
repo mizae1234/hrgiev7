@@ -66,6 +66,15 @@ export async function POST(req: NextRequest) {
 
     const targetDate = parseDateString(date);
     const createdAssignments = [];
+    let replacedCount = 0;
+
+    // Employees who already checked in on this date: the new assignment will
+    // NOT change their existing attendance record (location/shift are fixed at check-in).
+    const dayAttendances = await DataService.getDailyAttendance({ date: targetDate });
+    const checkedInEmployeeIds = new Set(
+      dayAttendances.filter((a: any) => a.checkInTime).map((a: any) => a.employeeId)
+    );
+    const alreadyCheckedIn: string[] = [];
 
     for (const empId of ids) {
       const emp = await DataService.getEmployeeById(empId);
@@ -75,7 +84,7 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      const assignment = await DataService.createAssignment({
+      const result = await DataService.createAssignment({
         employeeId: empId,
         date: targetDate,
         workLocationId,
@@ -85,7 +94,11 @@ export async function POST(req: NextRequest) {
         createdById: user.id,
       });
 
-      createdAssignments.push(assignment);
+      createdAssignments.push(result.assignment);
+      replacedCount += result.replacedCount;
+      if (checkedInEmployeeIds.has(empId)) {
+        alreadyCheckedIn.push(`${emp.employeeId} ${emp.firstName} ${emp.lastName}`);
+      }
     }
 
     await createAuditLog({
@@ -94,6 +107,7 @@ export async function POST(req: NextRequest) {
       entity: "ASSIGNMENT",
       details: {
         assignedCount: createdAssignments.length,
+        replacedCount,
         date,
         workLocationId,
         shiftTemplateId,
@@ -103,8 +117,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: `มอบหมายสถานที่เรียบร้อยแล้ว (${createdAssignments.length} รายการ)`,
+        message: `มอบหมายสถานที่เรียบร้อยแล้ว (${createdAssignments.length} รายการ${
+          replacedCount > 0 ? `, แทนที่รายการเดิม ${replacedCount} รายการ` : ""
+        })`,
         assignments: createdAssignments,
+        replacedCount,
+        alreadyCheckedIn,
       },
       { status: 201 }
     );

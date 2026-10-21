@@ -16,6 +16,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { AssignmentFormModal } from "@/components/admin/AssignmentFormModal";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { formatBangkokDate, formatThaiFullDate, getTodayDateString } from "@/lib/attendance";
 
 export default function BoothAssignmentPage() {
@@ -65,15 +66,22 @@ export default function BoothAssignmentPage() {
     fetchAssignments();
   }, [selectedCompanyId, selectedDate]);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("ต้องการยกเลิกการมอบหมายจุดนี้ใช่หรือไม่?")) return;
+  const [pendingDelete, setPendingDelete] = useState<any | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/assignments/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/assignments/${pendingDelete.id}`, { method: "DELETE" });
       if (res.ok) {
         fetchAssignments();
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setDeleting(false);
+      setPendingDelete(null);
     }
   };
 
@@ -201,7 +209,8 @@ export default function BoothAssignmentPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => setPendingDelete(item)}
+                        title="ยกเลิกการมอบหมาย"
                         className="text-rose-600 hover:bg-rose-50 h-8 px-2"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -225,6 +234,49 @@ export default function BoothAssignmentPage() {
         shifts={shifts}
         initialDate={selectedDate}
       />
+
+      {/* Cancel assignment confirmation */}
+      <ConfirmDialog
+        isOpen={!!pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+        isLoading={deleting}
+        tone="danger"
+        title="ยกเลิกการมอบหมายจุดนี้?"
+        message="พนักงานจะกลับไปลงเวลา ณ สถานที่ทำงานหลักและกะเริ่มต้นของตนเอง"
+        confirmLabel="ยกเลิกการมอบหมาย"
+        cancelLabel="เก็บไว้"
+      >
+        {pendingDelete && (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2 text-xs">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-full bg-teal-100 text-teal-800 font-bold flex items-center justify-center shrink-0">
+                {pendingDelete.employee?.firstName?.charAt(0) || "E"}
+              </div>
+              <div className="min-w-0">
+                <div className="font-bold text-slate-900 truncate">
+                  {pendingDelete.employee?.firstName} {pendingDelete.employee?.lastName}
+                </div>
+                <div className="font-mono text-[11px] text-slate-400">
+                  {pendingDelete.employee?.employeeId}
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-slate-200 pt-2 space-y-1.5 text-slate-600">
+              <div className="flex items-start gap-1.5">
+                <MapPin className="h-3.5 w-3.5 text-teal-600 shrink-0 mt-0.5" />
+                <span className="font-medium text-slate-800">
+                  {pendingDelete.workLocation?.locationName}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                <span>{formatThaiFullDate(new Date(pendingDelete.date))}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </ConfirmDialog>
     </div>
   );
 }

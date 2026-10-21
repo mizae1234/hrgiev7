@@ -1084,6 +1084,12 @@ export const DataService = {
       });
   },
 
+  /**
+   * Creates an assignment for an employee on a date.
+   * An employee can have only ONE assignment per day: any existing assignment
+   * for the same employee + date is replaced. Returns the new assignment and
+   * how many previous assignments were replaced.
+   */
   async createAssignment(data: {
     employeeId: string;
     date: Date;
@@ -1094,11 +1100,25 @@ export const DataService = {
     createdById?: string | null;
   }) {
     if (await isDatabaseConnected()) {
-      return prisma.locationAssignment.create({ data });
+      const [deleted, assignment] = await prisma.$transaction([
+        prisma.locationAssignment.deleteMany({
+          where: { employeeId: data.employeeId, date: data.date },
+        }),
+        prisma.locationAssignment.create({ data }),
+      ]);
+      return { assignment, replacedCount: deleted.count };
     }
+
+    const dateFormatted = formatBangkokDate(data.date);
+    const before = memoryStore.assignments.length;
+    memoryStore.assignments = memoryStore.assignments.filter(
+      (a) => !(a.employeeId === data.employeeId && formatBangkokDate(a.date) === dateFormatted)
+    );
+    const replacedCount = before - memoryStore.assignments.length;
+
     const newAssign = {
       ...data,
-      id: "assign-" + Date.now(),
+      id: "assign-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
       shiftTemplateId: data.shiftTemplateId || null,
       notes: data.notes || null,
       createdById: data.createdById || null,
@@ -1106,7 +1126,7 @@ export const DataService = {
       updatedAt: new Date(),
     };
     memoryStore.assignments.push(newAssign);
-    return newAssign;
+    return { assignment: newAssign, replacedCount };
   },
 
   async deleteAssignment(id: string) {
@@ -1125,17 +1145,20 @@ export const DataService = {
   async getEffectiveSchedule(employeeId: string, date: Date) {
     const dateFormatted = formatBangkokDate(date);
 
-    // 1. Check Booth/Location assignment first
+    // 1. Check Booth/Location assignment first (newest wins if duplicates exist)
     let assignment = null;
     if (await isDatabaseConnected()) {
       assignment = await prisma.locationAssignment.findFirst({
         where: { employeeId, date },
         include: { workLocation: true, shiftTemplate: true },
+        orderBy: { createdAt: "desc" },
       });
     } else {
-      const match = memoryStore.assignments.find(
-        (a) => a.employeeId === employeeId && formatBangkokDate(a.date) === dateFormatted
-      );
+      const match = memoryStore.assignments
+        .filter(
+          (a) => a.employeeId === employeeId && formatBangkokDate(a.date) === dateFormatted
+        )
+        .at(-1);
       if (match) {
         assignment = {
           ...match,
