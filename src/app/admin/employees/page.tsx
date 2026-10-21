@@ -226,9 +226,9 @@ export default function EmployeeManagementPage() {
       {/* Employees Table */}
       <Card className="border-slate-200/80 overflow-hidden p-0">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full min-w-[1100px] text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/80 text-slate-600 font-bold">
+              <tr className="border-b border-slate-200 bg-slate-50/80 text-slate-600 font-bold whitespace-nowrap">
                 <th className="py-3 px-4">รหัสพนักงาน</th>
                 <th className="py-3 px-4">ชื่อ - นามสกุล</th>
                 <th className="py-3 px-4">บริษัท & แผนก</th>
@@ -255,16 +255,16 @@ export default function EmployeeManagementPage() {
               ) : (
                 employees.map((emp) => (
                   <tr key={emp.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-teal-700">
+                    <td className="py-3 px-4 font-mono font-bold text-teal-700 whitespace-nowrap">
                       {emp.employeeId}
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-900">
+                    <td className="py-3 px-4 min-w-[180px]">
+                      <div className="font-semibold text-slate-900 whitespace-nowrap">
                         {emp.firstName} {emp.lastName}
                       </div>
                       <div className="text-[11px] text-slate-400">{emp.email || emp.phone || "-"}</div>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 min-w-[170px]">
                       <span className="font-semibold text-slate-800 block">
                         {emp.company?.code || "-"}
                       </span>
@@ -272,8 +272,8 @@ export default function EmployeeManagementPage() {
                         {emp.department?.name?.split("(")[0] || "-"}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-slate-700 font-medium">{emp.position}</td>
-                    <td className="py-3 px-4 text-slate-600">
+                    <td className="py-3 px-4 min-w-[200px] text-slate-700 font-medium">{emp.position}</td>
+                    <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
                       {emp.defaultShift ? (
                         <span className="inline-flex items-center gap-1 font-mono text-[11px]">
                           <Clock className="h-3 w-3 text-slate-400" />
@@ -283,9 +283,12 @@ export default function EmployeeManagementPage() {
                         <span className="text-slate-400">-</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-slate-600 max-w-[150px] truncate">
+                    <td className="py-3 px-4 text-slate-600">
                       {emp.defaultLocation ? (
-                        <span className="inline-flex items-center gap-1 text-[11px]">
+                        <span
+                          className="flex items-center gap-1 text-[11px] max-w-[180px] min-w-0"
+                          title={emp.defaultLocation.locationName}
+                        >
                           <MapPin className="h-3 w-3 text-slate-400 shrink-0" />
                           <span className="truncate">{emp.defaultLocation.locationName}</span>
                         </span>
@@ -293,7 +296,7 @@ export default function EmployeeManagementPage() {
                         <span className="text-slate-400">-</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-3 px-4 text-center whitespace-nowrap">
                       <Badge
                         variant={
                           emp.employmentStatus === "ACTIVE"
@@ -311,7 +314,7 @@ export default function EmployeeManagementPage() {
                           : emp.employmentStatus}
                       </Badge>
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => handleOpenHistory(emp)}
