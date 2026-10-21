@@ -110,8 +110,8 @@ export default function LocationManagementPage() {
                 className="hover:shadow-md transition-all border-slate-200/80 flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-start justify-between gap-3 min-h-[52px]">
+                    <div className="flex items-start gap-2.5 min-w-0 flex-1">
                       <div
                         className={`p-2 rounded-xl shrink-0 ${
                           isBooth
@@ -121,17 +121,24 @@ export default function LocationManagementPage() {
                       >
                         {isBooth ? <Store className="h-4 w-4" /> : <Building className="h-4 w-4" />}
                       </div>
-                      <div>
-                        <span className="font-bold text-sm text-slate-900 block leading-tight">
+                      <div className="min-w-0 flex-1">
+                        <span
+                          className="font-bold text-sm text-slate-900 block leading-snug line-clamp-2"
+                          title={loc.locationName}
+                        >
                           {loc.locationName}
                         </span>
-                        <span className="font-mono text-[11px] text-slate-400">
+                        <span className="font-mono text-[11px] text-slate-400 block mt-0.5">
                           {loc.locationCode}
                         </span>
                       </div>
                     </div>
 
-                    <Badge variant={isBooth ? "warning" : "info"} size="sm">
+                    <Badge
+                      variant={isBooth ? "warning" : "info"}
+                      size="sm"
+                      className="shrink-0 whitespace-nowrap"
+                    >
                       {isBooth ? "จุดบูธ" : "สำนักงาน"}
                     </Badge>
                   </div>

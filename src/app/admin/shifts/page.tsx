@@ -8,6 +8,15 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { ShiftFormModal } from "@/components/admin/ShiftFormModal";
 
+/** Adds minutes to an "HH:mm" string, e.g. addMinutes("09:00", 15) => "09:15". */
+function addMinutes(time: string, minutes: number): string {
+  const [h, m] = (time || "00:00").split(":").map(Number);
+  const total = (((h * 60 + m + (minutes || 0)) % 1440) + 1440) % 1440;
+  const hh = String(Math.floor(total / 60)).padStart(2, "0");
+  const mm = String(total % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
 export default function ShiftManagementPage() {
   const { selectedCompanyId } = useAdminContext();
 
@@ -111,38 +120,45 @@ export default function ShiftManagementPage() {
               className="hover:shadow-md transition-all border-slate-200/80 flex flex-col justify-between"
             >
               <div>
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-2.5 rounded-xl bg-teal-50 text-teal-600">
+                <div className="flex items-start justify-between gap-3 min-h-[60px]">
+                  <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                    <div className="p-2.5 rounded-xl bg-teal-50 text-teal-600 shrink-0">
                       <Clock className="h-5 w-5" />
                     </div>
-                    <div>
-                      <span className="font-mono text-[11px] font-bold text-slate-400 block">
+                    <div className="min-w-0 flex-1">
+                      <span className="font-mono text-[11px] font-bold text-slate-400 block truncate">
                         {shift.shiftCode}
                       </span>
-                      <h3 className="font-bold text-sm text-slate-900 leading-tight">
+                      <h3
+                        className="font-bold text-sm text-slate-900 leading-snug line-clamp-2"
+                        title={shift.shiftName}
+                      >
                         {shift.shiftName}
                       </h3>
                     </div>
                   </div>
 
-                  <Badge variant={shift.active ? "success" : "default"} size="sm">
+                  <Badge
+                    variant={shift.active ? "success" : "default"}
+                    size="sm"
+                    className="shrink-0 whitespace-nowrap"
+                  >
                     {shift.active ? "เปิดใช้งาน" : "ปิดใช้งาน"}
                   </Badge>
                 </div>
 
-                <div className="my-4 rounded-xl bg-slate-50 p-3.5 border border-slate-100 flex items-center justify-around text-center">
+                <div className="my-4 rounded-xl bg-slate-50 py-3.5 px-4 border border-slate-100 grid grid-cols-[1fr_auto_1fr] items-center text-center">
                   <div>
-                    <span className="text-[10px] text-slate-400 block uppercase font-bold">
+                    <span className="text-[10px] text-slate-400 block font-bold">
                       เวลาเข้างาน
                     </span>
                     <span className="font-mono font-black text-lg text-slate-900">
                       {shift.startTime}
                     </span>
                   </div>
-                  <span className="text-slate-300 font-bold">→</span>
+                  <span className="text-slate-300 font-bold px-2">→</span>
                   <div>
-                    <span className="text-[10px] text-slate-400 block uppercase font-bold">
+                    <span className="text-[10px] text-slate-400 block font-bold">
                       เวลาเลิกงาน
                     </span>
                     <span className="font-mono font-black text-lg text-slate-900">
@@ -151,15 +167,17 @@ export default function ShiftManagementPage() {
                   </div>
                 </div>
 
-                <div className="space-y-1.5 text-xs text-slate-600">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">ระยะเวลายืดหยุ่น (Grace Period):</span>
-                    <span className="font-bold text-teal-700">{shift.gracePeriodMinutes} นาที</span>
+                <div className="space-y-2 text-xs text-slate-600">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-500">ระยะเวลายืดหยุ่น (Grace Period)</span>
+                    <span className="font-bold text-teal-700 whitespace-nowrap">
+                      {shift.gracePeriodMinutes} นาที
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">เริ่มคิดสายเมื่อเกิน:</span>
-                    <span className="font-mono font-semibold text-amber-700">
-                      {shift.startTime} + {shift.gracePeriodMinutes} นาที
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-500">เริ่มคิดสายหลังเวลา</span>
+                    <span className="font-mono font-bold text-amber-700 whitespace-nowrap">
+                      {addMinutes(shift.startTime, shift.gracePeriodMinutes)} น.
                     </span>
                   </div>
                 </div>

@@ -121,7 +121,7 @@ export function LocationFormModal({
 
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="รหัสสถานที่ (Location Code) *"
+            label="รหัสสถานที่ (Location Code)"
             required
             value={formData.locationCode}
             onChange={(e) =>
@@ -139,7 +139,7 @@ export function LocationFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, companyId: e.target.value })
               }
-              className="w-full rounded-lg border border-slate-300 p-2 text-xs"
+              className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
             >
               {companies.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -152,7 +152,7 @@ export function LocationFormModal({
 
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="ชื่อสถานที่ / จุดบูธ *"
+            label="ชื่อสถานที่ / จุดบูธ"
             required
             value={formData.locationName}
             onChange={(e) =>
@@ -170,7 +170,7 @@ export function LocationFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, locationType: e.target.value })
               }
-              className="w-full rounded-lg border border-slate-300 p-2 text-xs font-semibold"
+              className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
             >
               <option value="OFFICE">🏢 สำนักงานใหญ่ (Office)</option>
               <option value="BRANCH">🏬 สาขา (Branch)</option>
@@ -191,7 +191,7 @@ export function LocationFormModal({
 
         <div className="grid grid-cols-3 gap-3">
           <Input
-            label="ละติจูด (Latitude) *"
+            label="ละติจูด (Latitude)"
             type="number"
             step="any"
             required
@@ -204,7 +204,7 @@ export function LocationFormModal({
             }
           />
           <Input
-            label="ลองจิจูด (Longitude) *"
+            label="ลองจิจูด (Longitude)"
             type="number"
             step="any"
             required
@@ -217,7 +217,7 @@ export function LocationFormModal({
             }
           />
           <Input
-            label="รัศมีอนุญาต (เมตร) *"
+            label="รัศมีอนุญาต (เมตร)"
             type="number"
             required
             value={formData.allowedRadiusMeters}
