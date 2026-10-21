@@ -119,7 +119,7 @@ export function AttendanceCorrectionModal({
           <select
             value={newStatus}
             onChange={(e) => setNewStatus(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 p-2 text-xs font-bold text-slate-800 focus:border-teal-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold text-slate-800 focus:border-teal-500 focus:outline-none"
           >
             <option value="PRESENT">ตรงเวลา (PRESENT)</option>
             <option value="LATE">มาสาย (LATE)</option>

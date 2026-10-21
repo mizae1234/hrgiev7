@@ -99,7 +99,7 @@ export function AssignmentFormModal({
 
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="วันที่ปฏิบัติงาน *"
+            label="วันที่ปฏิบัติงาน"
             type="date"
             required
             value={formData.date}
@@ -112,7 +112,7 @@ export function AssignmentFormModal({
               required
               value={formData.workLocationId}
               onChange={(e) => setFormData({ ...formData, workLocationId: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 p-2 text-xs"
+              className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
             >
               <option value="">เลือกสถานที่</option>
               {locations.map((l) => (
@@ -129,7 +129,7 @@ export function AssignmentFormModal({
           <select
             value={formData.shiftTemplateId}
             onChange={(e) => setFormData({ ...formData, shiftTemplateId: e.target.value })}
-            className="w-full rounded-lg border border-slate-300 p-2 text-xs"
+            className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
           >
             <option value="">ใช้กะเริ่มต้นของพนักงาน</option>
             {shifts.map((s) => (
