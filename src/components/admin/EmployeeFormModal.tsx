@@ -34,6 +34,9 @@ interface EmployeeFormModalProps {
   onSuccess: () => void;
 }
 
+const selectClassName =
+  "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-600";
+
 export function EmployeeFormModal({
   isOpen,
   onClose,
@@ -193,7 +196,7 @@ export function EmployeeFormModal({
               disabled={isEditing}
               value={formData.companyId}
               onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-teal-500 focus:outline-none"
+              className={selectClassName}
             >
               <option value="">เลือกบริษัท</option>
               {companies.map((c) => (
@@ -212,7 +215,7 @@ export function EmployeeFormModal({
               required
               value={formData.departmentId}
               onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-teal-500 focus:outline-none"
+              className={selectClassName}
             >
               <option value="">เลือกแผนก</option>
               {departments.map((d) => (
@@ -247,7 +250,7 @@ export function EmployeeFormModal({
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Input
-            label="วันเริ่มงาน *"
+            label="วันเริ่มงาน"
             type="date"
             required
             value={formData.employmentStartDate}
@@ -259,7 +262,7 @@ export function EmployeeFormModal({
             <select
               value={formData.defaultShiftId}
               onChange={(e) => setFormData({ ...formData, defaultShiftId: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-teal-500 focus:outline-none"
+              className={selectClassName}
             >
               <option value="">ไม่กำหนด (ใช้ค่าเริ่มต้น)</option>
               {shifts.map((s) => (
@@ -275,7 +278,7 @@ export function EmployeeFormModal({
             <select
               value={formData.defaultLocationId}
               onChange={(e) => setFormData({ ...formData, defaultLocationId: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-teal-500 focus:outline-none"
+              className={selectClassName}
             >
               <option value="">เลือกสถานที่</option>
               {locations.map((l) => (
@@ -294,7 +297,7 @@ export function EmployeeFormModal({
               <select
                 value={formData.employmentStatus}
                 onChange={(e) => setFormData({ ...formData, employmentStatus: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 p-2 text-xs font-bold text-slate-800"
+                className={`${selectClassName} font-bold`}
               >
                 <option value="ACTIVE">ปฏิบัติงาน (ACTIVE)</option>
                 <option value="INACTIVE">พักงาน (INACTIVE)</option>
