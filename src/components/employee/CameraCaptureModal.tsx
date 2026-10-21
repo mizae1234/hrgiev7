@@ -498,8 +498,8 @@ export function CameraCaptureModal({
           <canvas ref={canvasRef} className="hidden" />
         </div>
 
-        {/* Simulation testing banner for local testing */}
-        {!isWithinRadius && (
+        {/* Simulation testing banner for local testing (development only) */}
+        {process.env.NODE_ENV === "development" && !isWithinRadius && (
           <div className="px-4 py-2 bg-amber-950/40 border-t border-amber-900/50 flex items-center justify-between text-[11px] text-amber-300">
             <span>ทดสอบระบบ: ใช้พิกัดจำลอง ณ จุดปฏิบัติงาน</span>
             <button
