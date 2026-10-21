@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { formatBangkokDate, formatThaiDateTime, getStatusBadgeInfo } from "@/lib/attendance";
+import { formatDuration } from "@/lib/duration";
 
 interface EmployeeHistoryModalProps {
   isOpen: boolean;
@@ -80,7 +81,7 @@ export function EmployeeHistoryModal({
                         {item.checkOutTime ? formatThaiDateTime(new Date(item.checkOutTime)) : "-"}
                       </td>
                       <td className="py-2.5 px-3 text-slate-600 font-mono">
-                        {item.lateMinutes ? `${item.lateMinutes} นาที` : "-"}
+                        {item.lateMinutes ? formatDuration(item.lateMinutes) : "-"}
                       </td>
                       <td className="py-2.5 px-3 text-center">
                         <span

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { formatDuration } from "@/lib/duration";
 import {
   BarChart3,
   Download,
@@ -209,7 +210,7 @@ export default function ReportsPage() {
                       </td>
                       <td className="py-3 px-4 font-mono">
                         {item.lateMinutes > 0 ? (
-                          <span className="text-amber-700 font-bold">{item.lateMinutes} นาที</span>
+                          <span className="text-amber-700 font-bold">{formatDuration(item.lateMinutes)}</span>
                         ) : (
                           <span className="text-slate-400">-</span>
                         )}

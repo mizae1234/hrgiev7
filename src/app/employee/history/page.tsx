@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { formatDuration } from "@/lib/duration";
 import {
   History,
   Calendar,
@@ -184,12 +185,12 @@ export default function EmployeeHistoryPage() {
                   <div className="text-[10px] text-slate-500 flex flex-wrap gap-2 pt-1">
                     {item.isLate && (
                       <span className="text-amber-700 font-semibold">
-                        ⚠️ สาย {item.lateMinutes} นาที
+                        ⚠️ สาย {formatDuration(item.lateMinutes)}
                       </span>
                     )}
                     {item.isEarlyLeave && (
                       <span className="text-orange-700 font-semibold">
-                        ⚠️ กลับก่อน {item.earlyLeaveMinutes} นาที
+                        ⚠️ กลับก่อน {formatDuration(item.earlyLeaveMinutes)}
                       </span>
                     )}
                     {item.isCorrected && (

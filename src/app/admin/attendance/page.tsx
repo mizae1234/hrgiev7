@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { formatDuration } from "@/lib/duration";
 import {
   ClipboardList,
   Search,
@@ -163,9 +164,9 @@ export default function AttendanceBoardPage() {
       {/* Attendance Board Table */}
       <Card className="border-slate-200/80 overflow-hidden p-0">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full min-w-[1150px] text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/80 text-slate-600 font-bold">
+              <tr className="border-b border-slate-200 bg-slate-50/80 text-slate-600 font-bold whitespace-nowrap">
                 <th className="py-3 px-4">พนักงาน</th>
                 <th className="py-3 px-4">สถานที่กำหนด</th>
                 <th className="py-3 px-4">กะเวลา</th>
@@ -197,28 +198,31 @@ export default function AttendanceBoardPage() {
                   return (
                     <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                       {/* Employee */}
-                      <td className="py-3 px-4">
-                        <div className="font-mono text-[11px] font-bold text-teal-700">
+                      <td className="py-3 px-4 min-w-[200px]">
+                        <div className="font-mono text-[11px] font-bold text-teal-700 whitespace-nowrap">
                           {item.employee?.employeeId}
                         </div>
-                        <div className="font-semibold text-slate-900">
+                        <div className="font-semibold text-slate-900 whitespace-nowrap">
                           {item.employee?.firstName} {item.employee?.lastName}
                         </div>
-                        <div className="text-[10px] text-slate-400">
+                        <div className="text-[10px] text-slate-400 leading-snug">
                           {item.employee?.company?.code} • {item.employee?.department?.name?.split("(")[0]}
                         </div>
                       </td>
 
                       {/* Location */}
                       <td className="py-3 px-4">
-                        <div className="font-bold text-slate-900 flex items-center gap-1">
+                        <div
+                          className="font-bold text-slate-900 flex items-center gap-1 max-w-[200px] min-w-0"
+                          title={item.scheduledLocation?.locationName}
+                        >
                           <MapPin className="h-3 w-3 text-teal-600 shrink-0" />
-                          <span className="truncate max-w-[140px]">
+                          <span className="truncate">
                             {item.scheduledLocation?.locationName}
                           </span>
                         </div>
                         <span
-                          className={`text-[10px] px-1.5 py-0.2 rounded font-semibold inline-block mt-0.5 ${
+                          className={`text-[10px] px-1.5 py-0.5 rounded font-semibold inline-block mt-1 whitespace-nowrap ${
                             isBooth ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-600"
                           }`}
                         >
@@ -227,7 +231,7 @@ export default function AttendanceBoardPage() {
                       </td>
 
                       {/* Shift */}
-                      <td className="py-3 px-4 font-mono font-medium text-slate-700">
+                      <td className="py-3 px-4 font-mono font-medium text-slate-700 whitespace-nowrap">
                         {item.effectiveStartTime} - {item.effectiveEndTime}
                       </td>
 
@@ -318,15 +322,15 @@ export default function AttendanceBoardPage() {
                       </td>
 
                       {/* Late / Early Minutes */}
-                      <td className="py-3 px-4 font-mono text-[11px]">
+                      <td className="py-3 px-4 text-[11px] whitespace-nowrap">
                         {item.isLate && (
                           <span className="text-amber-700 font-bold block">
-                            สาย {item.lateMinutes} นาที
+                            สาย {formatDuration(item.lateMinutes)}
                           </span>
                         )}
                         {item.isEarlyLeave && (
                           <span className="text-orange-700 font-bold block">
-                            กลับก่อน {item.earlyLeaveMinutes} นาที
+                            กลับก่อน {formatDuration(item.earlyLeaveMinutes)}
                           </span>
                         )}
                         {!item.isLate && !item.isEarlyLeave && item.checkInTime && (
@@ -336,7 +340,7 @@ export default function AttendanceBoardPage() {
                       </td>
 
                       {/* Status */}
-                      <td className="py-3 px-4 text-center">
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
                         <span
                           className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold border ${statusInfo.className}`}
                         >
@@ -353,12 +357,12 @@ export default function AttendanceBoardPage() {
                       </td>
 
                       {/* Action */}
-                      <td className="py-3 px-4 text-right">
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleOpenCorrection(item)}
-                          className="h-8 text-xs font-semibold text-slate-700 hover:text-teal-700 hover:border-teal-300"
+                          className="h-8 px-3 text-xs font-semibold text-slate-700 hover:text-teal-700 hover:border-teal-300 whitespace-nowrap"
                         >
                           <Edit3 className="h-3 w-3 mr-1" />
                           แก้ไขรายการ

@@ -1,6 +1,7 @@
 import React from "react";
 import { Card } from "@/components/ui/Card";
 import { formatBangkokTime } from "@/lib/attendance";
+import { formatDuration } from "@/lib/duration";
 
 interface AttendanceStatusCardProps {
   attendance: any;
@@ -28,7 +29,7 @@ export function AttendanceStatusCard({
               </span>
               {attendance.isLate ? (
                 <span className="text-[10px] text-amber-700 font-bold">
-                  สาย {attendance.lateMinutes} นาที
+                  สาย {formatDuration(attendance.lateMinutes)}
                 </span>
               ) : (
                 <span className="text-[10px] text-emerald-600 font-semibold">ตรงเวลา</span>
@@ -49,7 +50,7 @@ export function AttendanceStatusCard({
               </span>
               {attendance.isEarlyLeave ? (
                 <span className="text-[10px] text-orange-700 font-bold">
-                  กลับก่อน {attendance.earlyLeaveMinutes} นาที
+                  กลับก่อน {formatDuration(attendance.earlyLeaveMinutes)}
                 </span>
               ) : (
                 <span className="text-[10px] text-teal-600 font-semibold">เรียบร้อย</span>

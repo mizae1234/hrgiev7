@@ -3,6 +3,7 @@ import { getUserFromRequest } from "@/lib/auth";
 import { DataService } from "@/lib/data-service";
 import { formatBangkokTime } from "@/lib/attendance";
 import { uploadAttendanceImage } from "@/lib/s3";
+import { formatDuration } from "@/lib/duration";
 
 export async function POST(req: NextRequest) {
   const user = await getUserFromRequest(req);
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: result.isLate
-        ? `ลงเวลาเข้างานสำเร็จ (สาย ${result.lateMinutes} นาที) ณ เวลา ${checkInFormatted} น.`
+        ? `ลงเวลาเข้างานสำเร็จ (สาย ${formatDuration(result.lateMinutes)}) ณ เวลา ${checkInFormatted} น.`
         : `ลงเวลาเข้างานสำเร็จเรียบร้อย ณ เวลา ${checkInFormatted} น.`,
       checkInTime: result.summary.checkInTime,
       distanceMeters: result.distanceMeters,
